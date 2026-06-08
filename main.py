@@ -16,6 +16,9 @@ class Game:
         self.runnning = True
 
     def createRoom(self):
+        rand_pos_x = random.randint(TILESIZE, WIDTH_TELA - TILESIZE)
+        rand_pos_y = random.randint(TILESIZE, HEIGTH_TELA - TILESIZE)
+
         # Primeiro para pegar a string que compõe o mapa
         for pos, row in enumerate(tilemap):
             # Segundo para pegar os caracteres da string
@@ -27,18 +30,27 @@ class Game:
                 if column == "H":
                     Hole(self, value, pos)
 
+        for pos, row in enumerate(map):
+            for value, column in enumerate(row):
+                if value == rand_pos_x and pos == rand_pos_y:
+                    Inimigo_pausado(self, value, pos, True, False, 3.0)
+
     def new(self):
         # Quando começa um novo jogo
         self.playing = True
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
+
         self.blocks = pygame.sprite.LayeredUpdates()
         self.holes = pygame.sprite.LayeredUpdates()
-        self.eneimies = pygame.sprite.LayeredUpdates()
-        self.pickup = pygame.sprite.LayeredUpdates()
+
         self.projectiles = pygame.sprite.LayeredUpdates()
 
+        self.enemies = pygame.sprite.LayeredUpdates()
+        self.pickup = pygame.sprite.LayeredUpdates()
+
         self.player = None
+        self.inimigo = False
 
         self.createRoom()
 
@@ -48,23 +60,6 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.runnning = False
-
-            if event.type == pygame.KEYDOWN:
-                if self.player and hasattr(self.player, 'head'):
-                    head_x = self.player.head.rect.centerx
-                    head_y = self.player.head.rect.centery
-
-                    if event.key == pygame.K_UP:
-                        Projectile(self, head_x, head_y, 'face_up')
-
-                    elif event.key == pygame.K_DOWN:
-                        Projectile(self, head_x, head_y, 'face_down')
-
-                    elif event.key == pygame.K_LEFT:
-                        Projectile(self, head_x, head_y, 'face_left')
-
-                    elif event.key == pygame.K_RIGHT:
-                        Projectile(self, head_x, head_y, 'face_right')
 
     def uptade(self):
         self.all_sprites.update()

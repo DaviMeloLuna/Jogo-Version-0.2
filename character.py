@@ -35,6 +35,8 @@ class Player(pygame.sprite.Sprite):
 
         self.head = PlayerHead(self.game, self)
 
+        self.shoot_cooldown = 0
+
     def moviment(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -50,13 +52,44 @@ class Player(pygame.sprite.Sprite):
             self.y_change += SPEED
             self.facing = 'face_down'
 
+    def attack(self):
+        keys = pygame.key.get_pressed()
+
+        if self.shoot_cooldown == 0 and hasattr(self, 'head'):
+            hx = self.head.rect.centerx
+            hy = self.head.rect.centery
+            shoot = False
+
+            if keys[pygame.K_UP]:
+                Projectile(self.game, hx, hy, 'face_up')
+                shoot = True
+            elif keys[pygame.K_DOWN]:
+                Projectile(self.game, hx, hy, 'face_down')
+                shoot = True
+            elif keys[pygame.K_LEFT]:
+                Projectile(self.game, hx, hy, 'face_left')
+                shoot = True
+            elif keys[pygame.K_RIGHT]:
+                Projectile(self.game, hx, hy, 'face_right')
+                shoot = True
+
+            if shoot:
+                self.shoot_cooldown = FREQ_PROJ
+
     def update(self):
         self.moviment()
+        self.attack()
+
+        if self.shoot_cooldown > 0:
+            self.shoot_cooldown -= 1
 
         self.rect.x += self.x_change
         self.collide_blocks('x')
+        self.collide_holes('x')
+
         self.rect.y += self.y_change
         self.collide_blocks('y')
+        self.collide_holes('y')
 
         self.x_change = 0
         self.y_change = 0
@@ -149,15 +182,26 @@ class Projectile(pygame.sprite.Sprite):
         self.rect.centery = y
         self.facing = facing
 
+        self.distance_traveled = 0
+
+        self.max_distance = TILESIZE * RANGE_PROJ
+
     def update(self):
         if self.facing == "face_up":
             self.rect.y -= SPEED_PROJ
+            self.distance_traveled += SPEED_PROJ
         elif self.facing == "face_down":
             self.rect.y += SPEED_PROJ
+            self.distance_traveled += SPEED_PROJ
         elif self.facing == "face_left":
             self.rect.x -= SPEED_PROJ
+            self.distance_traveled += SPEED_PROJ
         elif self.facing == "face_right":
             self.rect.x += SPEED_PROJ
+            self.distance_traveled += SPEED_PROJ
+
+        if self.distance_traveled >= self.max_distance:
+            self.kill()
 
         if pygame.sprite.spritecollide(self, self.game.blocks, False):
             self.kill()

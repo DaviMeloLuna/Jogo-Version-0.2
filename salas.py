@@ -25,6 +25,7 @@ class SpecialRoomType(Enum):
     SH_PADRAO = (21, 15)
 
     SE_PADRAO = (21, 15)
+
     B_PADRAO = (21, 15)
     B_LONGO_H = (9, 31)
     B_LONGO_V = (43, 9)
@@ -36,6 +37,7 @@ class Labirinto:
         self.heogth_L = heigth_L
 
         self.common_type = random.choice(list(RoomType))
+        self.special_type = random.choice(list(SpecialRoomType))
         self.is_locked = False
 
 
