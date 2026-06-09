@@ -2,10 +2,10 @@ import pygame
 import sys
 import json
 
-from config import *
-from salas import *
-from character import *
-from enemies import *
+from classes.config import *
+from classes.salas import *
+from classes.character import *
+from classes.enemies import *
 
 
 class Game:
@@ -16,9 +16,6 @@ class Game:
         self.runnning = True
 
     def createRoom(self):
-        rand_pos_x = random.randint(TILESIZE, WIDTH_TELA - TILESIZE)
-        rand_pos_y = random.randint(TILESIZE, HEIGTH_TELA - TILESIZE)
-
         # Primeiro para pegar a string que compõe o mapa
         for pos, row in enumerate(tilemap):
             # Segundo para pegar os caracteres da string
@@ -35,6 +32,8 @@ class Game:
     def new(self):
         # Quando começa um novo jogo
         self.playing = True
+
+        self.andar = 1
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
 
