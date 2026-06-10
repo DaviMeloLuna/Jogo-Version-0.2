@@ -12,6 +12,9 @@ from classes.collectibles import *
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.font.init()
+        self.font = pygame.font.SysFont('Arial', 14, True)
+
         self.screen = pygame.display.set_mode((WIDTH_TELA, HEIGTH_TELA))
         self.clock = pygame.time.Clock()
         self.runnning = True
@@ -29,10 +32,8 @@ class Game:
                     Hole(self, value, pos)
                 if column == "B":
                     Block(self, value, pos)
-
-        for _ in range(5):
-            Inimigo_pausado(self, random.randint(32, WIDTH_TELA - 52),
-                            random.randint(32, HEIGTH_TELA - 48), False, True, 3)
+                if column == "D":
+                    Dummy(self, value, pos)
 
     def new(self):
         # Quando começa um novo jogo

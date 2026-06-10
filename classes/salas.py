@@ -40,6 +40,8 @@ class Salas:
         self.inimigos = []
         self.portas = []
 
+        self.gerar_sala()
+
     def gerar_sala(self):
         self.tiles = []
 
@@ -50,6 +52,7 @@ class Salas:
                     row.append('W')  # Parede
                 else:
                     row.append('.')  # Espaço vazio
+
             self.tiles.append(row)
 
 

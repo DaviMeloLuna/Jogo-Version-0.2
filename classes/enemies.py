@@ -6,66 +6,62 @@ import json
 from classes.config import *
 
 
-class Inimigo_pausado(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, fly, body, hp):
+class Dummy(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
         self.game = game
         self._layer = PLAYER_BODY_LAYER
-        self.group = self.game.all_sprites
+        self.group = self.game.all_sprites, self.game.enemies
 
         pygame.sprite.Sprite.__init__(self, self.group)
 
-        self.width = 20
-        self.height = 16
-
-        self.x_change = 0
-        self.y_change = 0
-
-        self.x = x
-        self.y = y
-
-        self.fly = fly
-        self.body = body
-
-        self.hp = hp
-
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill((250, 150, 50))
-
+        self.image = pygame.Surface((TILESIZE, TILESIZE + 20), pygame.SRCALPHA)
         self.rect = self.image.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
-        self.pos = pygame.math.Vector2(self.rect.center)
+        self.hitbox = pygame.Rect(self.rect.x, self.rect.y, TILESIZE, TILESIZE)
 
-    def uptade(self):
-        pos_inimigo = pygame.math.Vector2(self.rect.center)
-        pos_player = pygame.math.Vector2(self.game.player.rect.center)
+        self.damage_taken = 0
+        self.font = pygame.font.SysFont('Arial', 14, bold=True)
 
-        direction = pos_player - pos_inimigo
+        self.render_dummy()
 
-        if direction.length() > 0:
-            direction = direction.normalize()
+    def render_dummy(self):
+        self.image.fill((0, 0, 0, 0))
 
-        self.pos += direction * SPEED_INIMIGO
-        self.rect.center = self.pos
+        pygame.draw.rect(self.image, (0, 0, 255), (0, 0, TILESIZE, TILESIZE))
 
-    def collide_walls(self, direction):
-        if direction == "x":
-            hits_wall = pygame.sprite.spritecollide(
-                self, self.game.walls, False)
+        text = self.font.render(str(self.damage_taken), True, (255, 255, 255))
 
-            if hits_wall:
-                if self.x_change > 0:
-                    self.rect.x = hits_wall[0].rect.left - self.rect.width
-                if self.x_change < 0:
-                    self.rect.x = hits_wall[0].rect.right
+        text_rect = text.get_rect(center=(TILESIZE // 2, TILESIZE + 10))
+        self.image.blit(text, text_rect)
 
-        if direction == "y":
-            hits_wall = pygame.sprite.spritecollide(
-                self, self.game.walls, False)
+    def take_damage(self, amount):
+        self.damage_taken += amount
+        self.render_dummy()
 
-            if hits_wall:
-                if self.y_change > 0:
-                    self.rect.y = hits_wall[0].rect.top - self.rect.height
-                if self.y_change < 0:
-                    self.rect.y = hits_wall[0].rect.bottom
+
+class DamageCounter(pygame.sprite.Sprite):
+    def __init__(self, game, dummy):
+        self.game = game
+        self.dummy = dummy
+
+        self._layer = PLAYER_HEAD_LAYER
+        self.group = self.game.all_sprites
+
+        pygame.sprite.Sprite.__init__(self, self.group)
+        self.update_text()
+
+    def update_text(self):
+        text_surface = self.game.font.render(
+            str(self.dummy.damage_taken), True, (200, 100, 100))
+
+        self.image = text_surface
+        self.rect = self.image.get_rect()
+
+        self.rect.centerx = self.dummy.rect.centerx
+        self.rect.top = self.dummy.rect.bottom + 4
+
+    def update(self):
+        self.rect.centerx = self.dummy.rect.centerx
+        self.rect.top = self.dummy.rect.bottom + 4

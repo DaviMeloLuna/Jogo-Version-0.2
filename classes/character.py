@@ -61,17 +61,19 @@ class Player(pygame.sprite.Sprite):
             hy = self.head.rect.centery
             shoot = False
 
+            damage = DMG_BASE
+
             if keys[pygame.K_UP]:
-                Projectile(self.game, hx, hy, 'face_up')
+                Projectile(self.game, hx, hy, 'face_up', damage)
                 shoot = True
             elif keys[pygame.K_DOWN]:
-                Projectile(self.game, hx, hy, 'face_down')
+                Projectile(self.game, hx, hy, 'face_down', damage)
                 shoot = True
             elif keys[pygame.K_LEFT]:
-                Projectile(self.game, hx, hy, 'face_left')
+                Projectile(self.game, hx, hy, 'face_left', damage)
                 shoot = True
             elif keys[pygame.K_RIGHT]:
-                Projectile(self.game, hx, hy, 'face_right')
+                Projectile(self.game, hx, hy, 'face_right', damage)
                 shoot = True
 
             if shoot:
@@ -187,7 +189,7 @@ class PlayerHead(pygame.sprite.Sprite):
 
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, facing):
+    def __init__(self, game, x, y, facing, damage):
         self.game = game
         self._layer = PROJ_LAYER
         self.group = self.game.all_sprites, self.game.projectiles
@@ -195,8 +197,8 @@ class Projectile(pygame.sprite.Sprite):
         # Objeto neto
         pygame.sprite.Sprite.__init__(self, self.group)
 
-        self.width = 10
-        self.heigth = 10
+        self.width = 15
+        self.heigth = 15
 
         self.image = pygame.Surface([self.width, self.heigth])
         self.image.fill(YELLOW)
@@ -204,10 +206,11 @@ class Projectile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
+
         self.facing = facing
+        self.damage = damage
 
         self.distance_traveled = 0
-
         self.max_distance = TILESIZE * RANGE_PROJ
 
     def update(self):
@@ -232,3 +235,11 @@ class Projectile(pygame.sprite.Sprite):
 
         if pygame.sprite.spritecollide(self, self.game.walls, False):
             self.kill()
+
+        hits_enemy = pygame.sprite.spritecollide(
+            self, self.game.enemies, False)
+        for hit in hits_enemy:
+            if self.rect.colliderect(hit.hitbox):
+                hit.take_damage(self.damage)
+                self.kill()
+                break
