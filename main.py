@@ -1,6 +1,5 @@
 import pygame
 import sys
-import json
 
 from classes.config import *
 from classes.salas import *
@@ -25,7 +24,7 @@ class Game:
                     Wall(self, value, pos)
                 elif column == "P":
                     if not hasattr(self, 'player') or self.player is None:
-                        self.player = Player(self, value, pos, True)
+                        self.player = Player(self, value, pos, False)
                     else:
                         self.player.rect.x = value * TILESIZE
                         self.player.rect.y = pos * TILESIZE
@@ -34,7 +33,7 @@ class Game:
                 elif column == "B":
                     Block(self, value, pos)
                 elif column in ['N', 'S', 'E', 'O']:
-                    Door_Open(self, value, pos)
+                    Door(self, value, pos, column)
 
     def troca_sala(self, novo_layout):
         # Função para trocar a sala, destruindo os sprites atuais e criando novos com base no layout fornecido
@@ -45,13 +44,13 @@ class Game:
             sprite.kill()
         for sprite in self.holes:
             sprite.kill()
-        for sprite in self.door_open:
+        for sprite in self.doors:
             sprite.kill()
 
         # Atualiza a sala atual
-        self.current_room = novo_layout
+        self.sala_atual = novo_layout
         # Carrega o novo layout
-        self.createRoom(self.current_room.layout)
+        self.createRoom(self.sala_atual.layout)
 
     def new(self):
         # Quando começa um novo jogo
@@ -64,9 +63,9 @@ class Game:
         self.walls = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.holes = pygame.sprite.LayeredUpdates()
+        self.portal = pygame.sprite.LayeredUpdates()
 
-        self.doors_open = pygame.sprite.LayeredUpdates()
-        self.doors_closed = pygame.sprite.LayeredUpdates()
+        self.doors = pygame.sprite.LayeredUpdates()
 
         self.projectiles = pygame.sprite.LayeredUpdates()
 
@@ -76,11 +75,11 @@ class Game:
         self.player = None
 
         # Define quantas salas quer no andar
-        gerador = MapGenerator(num_rooms=8)
-        self.map, self.current_room = gerador.generate()
+        gerador = MapGenerator(20)
+        self.map, self.sala_atual = gerador.generate()
 
         # Carrega a sala inicial (Start Room)
-        self.createRoom(self.current_room.layout)
+        self.createRoom(self.sala_atual.layout)
 
     def events(self):
         # Game loop event
@@ -91,6 +90,9 @@ class Game:
 
     def uptade(self):
         self.all_sprites.update()
+
+        if self.player:
+            self.check_door_collisions()
 
     def draw(self):
         self.screen.fill(BLACK)
@@ -111,6 +113,35 @@ class Game:
 
     def intro_screen(self):
         pass
+
+    def check_door_collisions(self):
+        # Checa se o self.player tocou em algum sprite do grupo self.doors
+        # O 'False' significa que a porta NÃO será deletada ao ser tocada
+        hits = pygame.sprite.spritecollide(self.player, self.doors, False)
+
+        if hits:
+            # Pega a primeira porta que o jogador encostou
+            porta_tocada = hits[0]
+            direcao = porta_tocada.direcao
+
+            # Verifica qual é a sala vizinha nessa direção
+            nova_sala = self.sala_atual.vizinho[direcao]
+
+            # Se a sala existir, fazemos a transição
+            if nova_sala:
+                self.troca_sala(nova_sala)
+
+                if direcao == 'N':
+                    self.player.rect.y = (15 - 2) * TILESIZE
+
+                elif direcao == 'S':
+                    self.player.rect.y = 1 * TILESIZE
+
+                elif direcao == 'E':
+                    self.player.rect.x = 1 * TILESIZE
+
+                elif direcao == 'W':
+                    self.player.rect.x = (21 - 2) * TILESIZE
 
 
 g = Game()

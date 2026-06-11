@@ -1,5 +1,4 @@
 import pygame
-import json
 
 from classes.config import *
 
@@ -8,7 +7,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y, bool_fly):
 
         self.game = game
-        self._layer = PLAYER_BODY_LAYER
+        self._layer = PLAYER_LAYER
         self.group = self.game.all_sprites
 
         # Objeto pai
@@ -196,8 +195,8 @@ class Projectile(pygame.sprite.Sprite):
         # Objeto neto
         pygame.sprite.Sprite.__init__(self, self.group)
 
-        self.width = 15
-        self.heigth = 15
+        self.width = 25
+        self.heigth = 25
 
         self.image = pygame.Surface([self.width, self.heigth])
         self.image.fill(YELLOW)
@@ -235,10 +234,7 @@ class Projectile(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, self.game.walls, False):
             self.kill()
 
-        if pygame.sprite.spritecollide(self, self.game.doors_open, False):
-            self.kill()
-
-        if pygame.sprite.spritecollide(self, self.game.doors_closed, False):
+        if pygame.sprite.spritecollide(self, self.game.doors, False):
             self.kill()
 
         hits_enemy = pygame.sprite.spritecollide(
