@@ -9,7 +9,7 @@ from classes.config import *
 class Dummy(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
-        self._layer = PLAYER_BODY_LAYER
+        self._layer = PLAYER_LAYER
         self.group = self.game.all_sprites, self.game.enemies
 
         pygame.sprite.Sprite.__init__(self, self.group)

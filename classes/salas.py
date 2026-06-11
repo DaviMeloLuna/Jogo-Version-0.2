@@ -83,6 +83,10 @@ class MapGenerator:
                 row_list = list(room.layout[7])
                 row_list[10] = 'P'
                 room.layout[7] = "".join(row_list)
+            else:
+                row_list = list(room.layout[5])
+                row_list[10] = 'A'
+                room.layout[5] = "".join(row_list)
 
             self.map.append(room)
 
@@ -165,7 +169,7 @@ class Door(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direcao):
 
         self.game = game
-        self._layer = PLAYER_LAYER
+        self._layer = DOOR_LAYER
         self.group = self.game.all_sprites, self.game.doors
 
         pygame.sprite.Sprite.__init__(self, self.group)
@@ -175,13 +179,27 @@ class Door(pygame.sprite.Sprite):
 
         self.direcao = direcao
 
-        self.width = TILESIZE
-        self.height = TILESIZE
+        if self.direcao in ['O', 'E']:
+            self.width = 32
+            self.height = 48
+        else:
+            self.width = 48
+            self.height = 32
 
         self.image = pygame.Surface([self.width, self.height])
         # Cinza em RGB
         self.image.fill((139, 139, 139))
 
         self.rect = self.image.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
+
+        if self.direcao == 'O':
+            self.rect.midleft = (self.x, self.y + TILESIZE // 2)
+
+        elif self.direcao == 'E':
+            self.rect.midright = (self.x + TILESIZE, self.y + TILESIZE // 2)
+
+        elif self.direcao == 'N':
+            self.rect.midtop = (self.x + TILESIZE // 2, self.y)
+
+        elif self.direcao == 'S':
+            self.rect.midbottom = (self.x + TILESIZE // 2, self.y + TILESIZE)

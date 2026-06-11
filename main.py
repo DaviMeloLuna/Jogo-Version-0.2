@@ -15,6 +15,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.runnning = True
 
+        self.espera_porta = 0
+
     def createRoom(self, layout):
         # Primeiro para pegar a string que compõe o mapa
         for pos, row in enumerate(layout):
@@ -25,9 +27,6 @@ class Game:
                 elif column == "P":
                     if not hasattr(self, 'player') or self.player is None:
                         self.player = Player(self, value, pos, False)
-                    else:
-                        self.player.rect.x = value * TILESIZE
-                        self.player.rect.y = pos * TILESIZE
                 elif column == "H":
                     Hole(self, value, pos)
                 elif column == "B":
@@ -36,7 +35,6 @@ class Game:
                     Door(self, value, pos, column)
 
     def troca_sala(self, novo_layout):
-        # Função para trocar a sala, destruindo os sprites atuais e criando novos com base no layout fornecido
         # Limpar as paredes, blocos, buracos atuais e portas abertas
         for sprite in self.walls:
             sprite.kill()
@@ -55,7 +53,6 @@ class Game:
     def new(self):
         # Quando começa um novo jogo
         self.playing = True
-
         self.andar = 1
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
@@ -94,6 +91,9 @@ class Game:
         if self.player:
             self.check_door_collisions()
 
+        if self.espera_porta > 0:
+            self.espera_porta -= 1
+
     def draw(self):
         self.screen.fill(BLACK)
         self.all_sprites.draw(self.screen)
@@ -115,11 +115,10 @@ class Game:
         pass
 
     def check_door_collisions(self):
-        # Checa se o self.player tocou em algum sprite do grupo self.doors
         # O 'False' significa que a porta NÃO será deletada ao ser tocada
         hits = pygame.sprite.spritecollide(self.player, self.doors, False)
 
-        if hits:
+        if hits and not self.espera_porta > 0:
             # Pega a primeira porta que o jogador encostou
             porta_tocada = hits[0]
             direcao = porta_tocada.direcao
@@ -132,16 +131,24 @@ class Game:
                 self.troca_sala(nova_sala)
 
                 if direcao == 'N':
-                    self.player.rect.y = (15 - 2) * TILESIZE
+                    self.player.rect.x = 10 * TILESIZE
+                    self.player.rect.y = 12 * TILESIZE
+                    self.espera_porta = 20
 
                 elif direcao == 'S':
-                    self.player.rect.y = 1 * TILESIZE
+                    self.player.rect.x = 10 * TILESIZE
+                    self.player.rect.y = 2 * TILESIZE
+                    self.espera_porta = 20
 
                 elif direcao == 'E':
-                    self.player.rect.x = 1 * TILESIZE
+                    self.player.rect.x = 2 * TILESIZE
+                    self.player.rect.y = 7 * TILESIZE
+                    self.espera_porta = 20
 
-                elif direcao == 'W':
-                    self.player.rect.x = (21 - 2) * TILESIZE
+                elif direcao == 'O':
+                    self.player.rect.x = 18 * TILESIZE
+                    self.player.rect.y = 7 * TILESIZE
+                    self.espera_porta = 20
 
 
 g = Game()
