@@ -34,6 +34,8 @@ class Player(pygame.sprite.Sprite):
 
         self.head = PlayerHead(self.game, self)
 
+        self.inventario = Inventario(self)
+
         self.shoot_cooldown = 0
 
     def moviment(self):
@@ -245,3 +247,8 @@ class Projectile(pygame.sprite.Sprite):
                 hit.take_damage(self.damage)
                 self.kill()
                 break
+
+
+class Inventario:
+    def __init__(self, game):
+        pass

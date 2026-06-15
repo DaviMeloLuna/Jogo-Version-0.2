@@ -1,6 +1,7 @@
 import pygame
 import sys
 
+from random import randint
 from classes.config import *
 from classes.salas import *
 from classes.character import *
@@ -31,6 +32,8 @@ class Game:
                     Hole(self, value, pos)
                 elif column == "B":
                     Block(self, value, pos)
+                elif column == "T":
+                    Pedestal(self, value, pos)
                 elif column in ['N', 'S', 'E', 'O']:
                     Door(self, value, pos, column)
 
@@ -44,23 +47,29 @@ class Game:
             sprite.kill()
         for sprite in self.doors:
             sprite.kill()
-
+        for sprite in self.pedestal:
+            sprite.kill()
         # Atualiza a sala atual
         self.sala_atual = novo_layout
+
+        # Maracação de visita ao entrar
+        self.sala_atual.foi_visitada = True
+
         # Carrega o novo layout
         self.createRoom(self.sala_atual.layout)
 
     def new(self):
         # Quando começa um novo jogo
         self.playing = True
-        self.andar = 1
+
+        andar = 10 + randint(2, 6)
 
         self.all_sprites = pygame.sprite.LayeredUpdates()
 
         self.walls = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.holes = pygame.sprite.LayeredUpdates()
-        self.portal = pygame.sprite.LayeredUpdates()
+        self.pedestal = pygame.sprite.LayeredUpdates()
 
         self.doors = pygame.sprite.LayeredUpdates()
 
@@ -72,8 +81,14 @@ class Game:
         self.player = None
 
         # Define quantas salas quer no andar
-        gerador = MapGenerator(20)
+        gerador = MapGenerator(andar)
         self.map, self.sala_atual = gerador.generate()
+
+        # Sala inicial descoberta por padrão
+        self.sala_atual.foi_visitada = True
+
+        # Começa o gerenciador do mini mapa
+        self.minimapa = Minimap(self)
 
         # Carrega a sala inicial (Start Room)
         self.createRoom(self.sala_atual.layout)
@@ -96,7 +111,11 @@ class Game:
 
     def draw(self):
         self.screen.fill(BLACK)
+        # Textura do cenário
         self.all_sprites.draw(self.screen)
+        # Desenha o mini mapa sobr posto no HUD
+        self.minimapa.draw(self.screen)
+
         self.clock.tick(FPS)
         pygame.display.update()
 
@@ -112,6 +131,9 @@ class Game:
         pass
 
     def intro_screen(self):
+        pass
+
+    def menu(self):
         pass
 
     def check_door_collisions(self):
@@ -158,6 +180,7 @@ g.new()
 while g.runnning:
     g.main()
     g.game_over()
+    g.menu()
 
 pygame.quit()
 sys.exit()

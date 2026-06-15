@@ -10,7 +10,7 @@
         "description_item": "Homming Attacks",
         "effect": [["homming", 1], ["cor", [81, 4, 194]]]
     },
-    "damage_bostter1":{
+    "damage_booster1":{
         "id": "1.100.3",
         "quality": 4,
         "description_item": "DMG Up",
@@ -22,7 +22,7 @@
         "description_item": "Triple Attacks",
         "effect": [2, "Up", "qtd_proj"]
     },
-    "damage_bostter2": {
+    "damage_booster2": {
         "id": "1.100.5",
         "quality": 3,
         "description_item": "DMG Up",
