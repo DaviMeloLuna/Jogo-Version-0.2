@@ -38,6 +38,10 @@ class Player(pygame.sprite.Sprite):
 
         self.shoot_cooldown = 0
 
+        # Exemplo de quantidade de vidas e de tempo de duração da "partida", pode ser modificado se decidirmos algo novo
+        self.vidas = 3
+        self.tempo = 300 # 5 minutos em segundos
+
     def moviment(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -82,6 +86,8 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.moviment()
         self.attack()
+
+        self.coletar_itens()
 
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
@@ -161,6 +167,15 @@ class Player(pygame.sprite.Sprite):
                     self.rect.y = hits_hole[0].rect.top - self.rect.height
                 if self.y_change < 0:
                     self.rect.y = hits_hole[0].rect.bottom
+
+    def coletar_itens(self):
+        hits = pygame.sprite.spritecollide(self, self.game.pickup, True)
+
+        for hit in hits:
+            if hit.tipo == 'vida':
+                self.vidas += 1 # Ganha mais uma vida
+            elif hit.tipo == 'tempo':
+                self.tempo += 15 # Ganha 15 segundos extras para a partida
 
 
 class PlayerHead(pygame.sprite.Sprite):

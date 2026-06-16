@@ -7,6 +7,7 @@ from classes.salas import *
 from classes.character import *
 from classes.enemies import *
 from classes.collectibles import *
+from classes.coletaveis import *
 
 
 class Game:
@@ -17,6 +18,9 @@ class Game:
         self.runnning = True
 
         self.espera_porta = 0
+        # Tipo de cronômetro
+        self.EVENTO_RELOGIO = pygame.USEREVENT + 1
+        pygame.time.set_timer(self.EVENTO_RELOGIO, 1000)
 
     def createRoom(self, layout):
         # Primeiro para pegar a string que compõe o mapa
@@ -36,6 +40,10 @@ class Game:
                     Pedestal(self, value, pos)
                 elif column in ['N', 'S', 'E', 'O']:
                     Door(self, value, pos, column)
+                elif column == "V":
+                    coletavelVida(self, value, pos)
+                elif column == "M":
+                    coletavelTempo(self, value, pos)
 
     def troca_sala(self, novo_layout):
         # Limpar as paredes, blocos, buracos atuais e portas abertas
@@ -99,6 +107,12 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.runnning = False
+            if event.type == self.EVENTO_RELOGIO:
+                if self.player is not None:
+                    if self.player.tempo > 0:
+                        self.player.tempo -= 1
+                    else:
+                        self.playing = False
 
     def uptade(self):
         self.all_sprites.update()

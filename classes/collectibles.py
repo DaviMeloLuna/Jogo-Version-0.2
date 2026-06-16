@@ -1,4 +1,6 @@
 import pygame
+# A biblioteca "os" foi importada para facilitar o caminho das sprites, criando um tipo de caminho relativo
+import os
 
 from classes.config import *
 
@@ -7,7 +9,7 @@ class ColetavelChave:
     def __init__(self, game):
         self.game = game
 
-        caminho_sprite = r'C:\Users\davim\Estudos Programação\Python\Trabalho Perioo 1\assetes\sprites\tileset_chave.png'
+        caminho_sprite = os.path.join(os.path.dirname(__file__), '..', 'assetes', 'sprites', 'tileset_mapa.png')
 
         try:
             self.spritesheet = pygame.image.load(

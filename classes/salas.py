@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 from classes.config import *
 
@@ -79,10 +80,32 @@ class MapGenerator:
                 row_list = list(room.layout[7])
                 row_list[10] = 'P'
                 room.layout[7] = "".join(row_list)
+
+                # Forçando o coletável de vida perto do jogador para teste
+                row_list = list(room.layout[9])
+                row_list[8] = 'V'
+                room.layout[9] = "".join(row_list)
+
+                # Forçando coletável de tempo perto do jogador para teste
+                row_list = list(room.layout[9])
+                row_list[12] = 'M'
+                room.layout[9] = "".join(row_list)
             else:
                 row_list = list(room.layout[5])
                 row_list[10] = 'A'
                 room.layout[5] = "".join(row_list)
+
+                # Adiciona coletável de vida aleatoriamente
+                if random.random() < 0.5:  # 50% de chance
+                    row_list = list(room.layout[9])
+                    row_list[5] = 'V'
+                    room.layout[9] = "".join(row_list)
+
+                # Adiciona coletável de tempo  aleatoriamente
+                if random.random() < 0.5:  # 50% de chance
+                    row_list = list(room.layout[9])
+                    row_list[15] = 'M'
+                    room.layout[9] = "".join(row_list)
 
             self.map.append(room)
 
@@ -173,7 +196,8 @@ class Minimap:
     def __init__(self, game):
         self.game = game
 
-        caminho_sprite = r'C:\Users\davim\Estudos Programação\Python\Trabalho Perioo 1\assetes\sprites\tileset_mapa.png'
+        caminho_sprite = os.path.join(os.path.dirname(__file__), '..', 'assetes', 'sprites', 'tileset_mapa.png')
+        
 
         try:
             self.spritesheet = pygame.image.load(
@@ -261,7 +285,7 @@ class Pedestal(pygame.sprite.Sprite):
         self.y = y * TILESIZE
 
         self.image = pygame.image.load(
-            r"C:\Users\davim\Estudos Programação\Python\Trabalho Perioo 1\assetes\sprites\pedestal_placeholder.png"
+            caminho_sprite = os.path.join(os.path.dirname(__file__), '..', 'assetes', 'sprites', 'tileset_mapa.png')
         ).convert_alpha()
 
         self.rect = self.image.get_rect()
