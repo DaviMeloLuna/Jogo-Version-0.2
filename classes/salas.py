@@ -3,6 +3,7 @@ import random
 import os
 
 from classes.config import *
+from classes.collectibles import *
 
 
 class RoomNode:
@@ -196,8 +197,8 @@ class Minimap:
     def __init__(self, game):
         self.game = game
 
-        caminho_sprite = os.path.join(os.path.dirname(__file__), '..', 'assetes', 'sprites', 'tileset_mapa.png')
-        
+        caminho_sprite = os.path.join(os.path.dirname(
+            __file__), '..', 'assetes', 'sprites', 'tileset_mapa.png')
 
         try:
             self.spritesheet = pygame.image.load(
@@ -274,19 +275,18 @@ class Pedestal(pygame.sprite.Sprite):
         self.game = game
 
         self._layer = DETAILS_LAYER
-        self.groups = (
-            self.game.all_sprites,
-            self.game.pedestal
-        )
+        self.groups = (self.game.all_sprites, self.game.pedestal)
 
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
 
-        self.image = pygame.image.load(
-            caminho_sprite = os.path.join(os.path.dirname(__file__), '..', 'assetes', 'sprites', 'tileset_mapa.png')
-        ).convert_alpha()
+        # Correção de bug: ao entrar na sala do tesouro o jogo fecha
+        caminho_sprite = os.path.join(os.path.dirname(
+            __file__), '..', 'assetes', 'sprites', 'pedestal_placeholder.png')
+
+        self.image = pygame.image.load(caminho_sprite).convert_alpha()
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)

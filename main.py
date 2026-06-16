@@ -7,7 +7,6 @@ from classes.salas import *
 from classes.character import *
 from classes.enemies import *
 from classes.collectibles import *
-from classes.coletaveis import *
 
 
 class Game:
@@ -31,7 +30,8 @@ class Game:
                     Wall(self, value, pos)
                 elif column == "P":
                     if not hasattr(self, 'player') or self.player is None:
-                        self.player = Player(self, value, pos, False)
+                        self.player = Player(
+                            self, value, pos, self.player_status)
                 elif column == "H":
                     Hole(self, value, pos)
                 elif column == "B":
@@ -41,9 +41,11 @@ class Game:
                 elif column in ['N', 'S', 'E', 'O']:
                     Door(self, value, pos, column)
                 elif column == "V":
-                    coletavelVida(self, value, pos)
+                    if not hasattr(self, 'vida') or self.vida is None:
+                        coletavelVida(self, value, pos)
                 elif column == "M":
-                    coletavelTempo(self, value, pos)
+                    if not hasattr(self, 'tempo') or self.tempo is None:
+                        coletavelTempo(self, value, pos)
 
     def troca_sala(self, novo_layout):
         # Limpar as paredes, blocos, buracos atuais e portas abertas
@@ -87,6 +89,18 @@ class Game:
         self.pickup = pygame.sprite.LayeredUpdates()
 
         self.player = None
+        self.player_status = {
+            "hp_max": 30,
+            "dano": 3.5,
+            "multi_atq": 1.0,
+            "alcance": 7.0,
+            "atq_speed": 1.0,
+            "frequencia": 0.0,
+            "speed": 1.0,
+            "sorte": 0.0
+        }
+        self.vida = None
+        self.tempo = None
 
         # Define quantas salas quer no andar
         gerador = MapGenerator(andar)

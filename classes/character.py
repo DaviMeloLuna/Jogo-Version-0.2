@@ -4,7 +4,7 @@ from classes.config import *
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, bool_fly):
+    def __init__(self, game, x, y, status):
 
         self.game = game
         self._layer = PLAYER_LAYER
@@ -15,7 +15,6 @@ class Player(pygame.sprite.Sprite):
 
         self.x = TILESIZE * x
         self.y = TILESIZE * y
-        self. fly = bool_fly
 
         self.width = TILESIZE
         self.height = TILESIZE
@@ -34,27 +33,32 @@ class Player(pygame.sprite.Sprite):
 
         self.head = PlayerHead(self.game, self)
 
-        self.inventario = Inventario(self)
+        self.inventario = Inventario(self.game)
 
         self.shoot_cooldown = 0
 
+        # Dicionário com as estatísticas do personagem
+        self.status = status
+
         # Exemplo de quantidade de vidas e de tempo de duração da "partida", pode ser modificado se decidirmos algo novo
         self.vidas = 3
-        self.tempo = 300 # 5 minutos em segundos
+        self.tempo = 300  # 5 minutos em segundos
 
     def moviment(self):
+        speed = self.status['speed'] * 4
+
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
-            self.x_change -= SPEED
+            self.x_change -= speed
             self.facing = 'face_left'
         if keys[pygame.K_d]:
-            self.x_change += SPEED
+            self.x_change += speed
             self.facing = 'face_right'
         if keys[pygame.K_w]:
-            self.y_change -= SPEED
+            self.y_change -= speed
             self.facing = 'face_up'
         if keys[pygame.K_s]:
-            self.y_change += SPEED
+            self.y_change += speed
             self.facing = 'face_down'
 
     def attack(self):
@@ -65,19 +69,20 @@ class Player(pygame.sprite.Sprite):
             hy = self.head.rect.centery
             shoot = False
 
-            damage = DMG_BASE
+            damage = self.status['dano']
+            speed_proj = self.status['atq_speed'] * 4
 
             if keys[pygame.K_UP]:
-                Projectile(self.game, hx, hy, 'face_up', damage)
+                Projectile(self.game, hx, hy, 'face_up', damage, speed_proj)
                 shoot = True
             elif keys[pygame.K_DOWN]:
-                Projectile(self.game, hx, hy, 'face_down', damage)
+                Projectile(self.game, hx, hy, 'face_down', damage, speed_proj)
                 shoot = True
             elif keys[pygame.K_LEFT]:
-                Projectile(self.game, hx, hy, 'face_left', damage)
+                Projectile(self.game, hx, hy, 'face_left', damage, speed_proj)
                 shoot = True
             elif keys[pygame.K_RIGHT]:
-                Projectile(self.game, hx, hy, 'face_right', damage)
+                Projectile(self.game, hx, hy, 'face_right', damage, speed_proj)
                 shoot = True
 
             if shoot:
@@ -94,13 +99,13 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.x += self.x_change
         self.collide_walls('x')
-        self.collide_blocks('x', self.fly)
-        self.collide_holes('x', self.fly)
+        self.collide_blocks('x')
+        self.collide_holes('x')
 
         self.rect.y += self.y_change
         self.collide_walls('y')
-        self.collide_blocks('y', self.fly)
-        self.collide_holes('y', self.fly)
+        self.collide_blocks('y')
+        self.collide_holes('y')
 
         self.x_change = 0
         self.y_change = 0
@@ -126,8 +131,8 @@ class Player(pygame.sprite.Sprite):
                 if self.y_change < 0:
                     self.rect.y = hits_wall[0].rect.bottom
 
-    def collide_blocks(self, direction, fly):
-        if direction == "x" and not fly:
+    def collide_blocks(self, direction):
+        if direction == "x":
             hits_block = pygame.sprite.spritecollide(
                 self, self.game.blocks, False)
 
@@ -137,7 +142,7 @@ class Player(pygame.sprite.Sprite):
                 if self.x_change < 0:
                     self.rect.x = hits_block[0].rect.right
 
-        if direction == "y" and not fly:
+        if direction == "y":
             hits_block = pygame.sprite.spritecollide(
                 self, self.game.blocks, False)
 
@@ -147,8 +152,8 @@ class Player(pygame.sprite.Sprite):
                 if self.y_change < 0:
                     self.rect.y = hits_block[0].rect.bottom
 
-    def collide_holes(self, direction, fly):
-        if direction == "x" and not fly:
+    def collide_holes(self, direction):
+        if direction == "x":
             hits_hole = pygame.sprite.spritecollide(
                 self, self.game.holes, False)
 
@@ -158,7 +163,7 @@ class Player(pygame.sprite.Sprite):
                 if self.x_change < 0:
                     self.rect.x = hits_hole[0].rect.right
 
-        if direction == "y" and not fly:
+        if direction == "y":
             hits_hole = pygame.sprite.spritecollide(
                 self, self.game.holes, False)
 
@@ -173,9 +178,9 @@ class Player(pygame.sprite.Sprite):
 
         for hit in hits:
             if hit.tipo == 'vida':
-                self.vidas += 1 # Ganha mais uma vida
+                self.vidas += 1  # Ganha mais uma vida
             elif hit.tipo == 'tempo':
-                self.tempo += 15 # Ganha 15 segundos extras para a partida
+                self.tempo += 15  # Ganha 15 segundos extras para a partida
 
 
 class PlayerHead(pygame.sprite.Sprite):
@@ -204,7 +209,7 @@ class PlayerHead(pygame.sprite.Sprite):
 
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, facing, damage):
+    def __init__(self, game, x, y, facing, damage, speed_proj):
         self.game = game
         self._layer = PROJ_LAYER
         self.group = self.game.all_sprites, self.game.projectiles
