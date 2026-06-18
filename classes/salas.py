@@ -82,6 +82,10 @@ class MapGenerator:
                 row_list[10] = 'P'
                 room.layout[7] = "".join(row_list)
 
+                row_list = list(room.layout[5]) #onde a mula sem cabeça vai ficar
+                row_list[10] = 'U'
+                room.layout[5] = "".join(row_list)
+
                 # Forçando o coletável de vida perto do jogador para teste
                 row_list = list(room.layout[9])
                 row_list[8] = 'V'
@@ -151,6 +155,7 @@ class MapGenerator:
 
             salas_chefe.append(sala)
 
+        return self.map, start_room
 
 class Wall(pygame.sprite.Sprite):
     def __init__(self, game, x, y):

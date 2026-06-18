@@ -77,6 +77,8 @@ class Game:
                     coletavelVida(self, value, pos)
                 elif column == "M":
                     coletavelTempo(self, value, pos)
+                elif column == "U":
+                    MulaSemCabeca(self, value, pos) #criação da mula sem cabeça
 
     def troca_sala(self, novo_layout):
         # Limpar as paredes, blocos, buracos atuais e portas abertas
