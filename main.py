@@ -81,10 +81,12 @@ class Game:
                 elif column == "M":
                     coletavelTempo(self, value, pos)
                 elif column == "U":
-                    MulaSemCabeca(self, value, pos) #criação da mula sem cabeça
-                    Iara(self, value, pos) #Não tava conseguindo enteder direito onde colocar, botei aí para testar
+                    # criação da mula sem cabeça
+                    MulaSemCabeca(self, value, pos)
+                    # Não tava conseguindo enteder direito onde colocar, botei aí para testar
+                    Iara(self, value, pos)
                 elif column == "C":
-                    Curupira(self, value, pos) #criação do curupira
+                    Curupira(self, value, pos)  # criação do curupira
 
     def troca_sala(self, novo_layout):
         # Limpar as paredes, blocos, buracos atuais e portas abertas
@@ -139,8 +141,14 @@ class Game:
         }
 
         # Define quantas salas quer no andar
-        gerador = MapGenerator(4)
+        gerador = MapGenerator(10)
         self.map, self.sala_atual = gerador.generate()
+
+        # Sala inicial descoberta por padrão
+        self.sala_atual.foi_visitada = True
+
+        # Começa o gerenciador do mini mapa
+        self.minimapa = Minimap(self)
 
         # Carrega a sala inicial (Start Room)
         self.createRoom(self.sala_atual.layout)
@@ -166,8 +174,8 @@ class Game:
 
         if self.player:
             self.check_door_collisions()
-            
-            #Verfica se o jogador morreu, se sim, termina o jogo
+
+            # Verfica se o jogador morreu, se sim, termina o jogo
             if self.player.hp <= 0:
                 self.playing = False
 
@@ -178,6 +186,9 @@ class Game:
         self.screen.fill(BLACK)
         # Textura do cenário
         self.all_sprites.draw(self.screen)
+
+        if hasattr(self, 'minimapa'):
+            self.minimapa.draw(self.screen)
 
         # Desenha vida, tempo e inventário "por cima"
         self.hud.draw(self.screen)
