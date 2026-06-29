@@ -2,6 +2,7 @@ import math
 import pygame
 
 from classes.config import *
+from collections import Counter
 
 
 class HUD:
@@ -146,10 +147,30 @@ class HUD:
             item for item in inventario.coisas if item.get('tipo') == 'passivo'
         ]
 
+        contagem_itens = Counter(item.get('nome', '?') for item in itens_passivos)
+
         y_icones = self.margem + (self.fonte_pequena.get_height() if texto else 0) + 4
         x_icone = x_direita
 
-        for item in reversed(itens_passivos):
+        contadores_fixos = [
+            ('V', RED, inventario.contagem_vida),
+            ('T', YELLOW, inventario.contagem_tempo),
+        ]
+
+        for letra, cor_icone, quantidade in contadores_fixos:
+            if quantidade <= 0:
+                continue
+
+            x_icone -= self.tamanho_icone_item + self.espaco_icone_item
+            if x_icone < self.margem:
+                break
+
+            rect_icone = pygame.Rect(
+                x_icone, y_icones, self.tamanho_icone_item, self.tamanho_icone_item
+            )
+            self._desenhar_icone_fixo(screen, rect_icone, letra, cor_icone, quantidade)
+
+        for nome, quantidade in reversed(list(contagem_itens.items())):
             x_icone -= self.tamanho_icone_item + self.espaco_icone_item
 
             if x_icone < self.margem:
@@ -159,11 +180,46 @@ class HUD:
                 x_icone, y_icones, self.tamanho_icone_item, self.tamanho_icone_item
             )
 
-            pygame.draw.rect(screen, CYAN, rect_icone)
-            pygame.draw.rect(screen, WHITE, rect_icone, 1)
+            self._desenhar_icone_item(screen, rect_icone, nome, quantidade)
 
-            nome = item.get('nome', '?')
-            letra = nome[0].upper() if nome else '?'
-            letra_render = self.fonte_letra_item.render(letra, True, BLACK)
-            letra_rect = letra_render.get_rect(center=rect_icone.center)
-            screen.blit(letra_render, letra_rect)
+    def _desenhar_icone_item(self, screen, rect_icone, nome, quantidade):
+        pygame.draw.rect(screen, CYAN, rect_icone)
+        pygame.draw.rect(screen, WHITE, rect_icone, 1)
+
+        letra = nome[0].upper() if nome else '?'
+        letra_render = self.fonte_letra_item.render(letra, True, BLACK)
+        letra_rect = letra_render.get_rect(center=rect_icone.center)
+        screen.blit(letra_render, letra_rect)
+
+        if quantidade > 1:
+            texto_qtd = str(quantidade) if quantidade < 10 else "9+"
+            qtd_render = self.fonte_letra_item.render(texto_qtd, True, WHITE)
+
+            raio_badge = 8
+            centro_badge = (rect_icone.right - 2, rect_icone.bottom - 2)
+
+            pygame.draw.circle(screen, BLACK, centro_badge, raio_badge)
+            pygame.draw.circle(screen, WHITE, centro_badge, raio_badge, 1)
+
+            qtd_rect = qtd_render.get_rect(center=centro_badge)
+            screen.blit(qtd_render, qtd_rect)
+            
+    def _desenhar_icone_fixo(self, screen, rect_icone, letra, cor_icone, quantidade):
+        pygame.draw.rect(screen, cor_icone, rect_icone)
+        pygame.draw.rect(screen, WHITE, rect_icone, 1)
+
+        letra_render = self.fonte_letra_item.render(letra, True, BLACK)
+        letra_rect = letra_render.get_rect(center=rect_icone.center)
+        screen.blit(letra_render, letra_rect)
+
+        texto_qtd = str(quantidade) if quantidade < 100 else "99+"
+        qtd_render = self.fonte_letra_item.render(texto_qtd, True, WHITE)
+
+        raio_badge = 8
+        centro_badge = (rect_icone.right - 2, rect_icone.bottom - 2)
+
+        pygame.draw.circle(screen, BLACK, centro_badge, raio_badge)
+        pygame.draw.circle(screen, WHITE, centro_badge, raio_badge, 1)
+
+        qtd_rect = qtd_render.get_rect(center=centro_badge)
+        screen.blit(qtd_render, qtd_rect)

@@ -247,13 +247,15 @@ class Player(pygame.sprite.Sprite):
             if hit.tipo == 'vida':
                 # Ganha mais vida
                 self.hp = min(self.status['hp_max'], self.hp + 10)
+                self.inventario.registrar_vida()
             elif hit.tipo == 'tempo':
                 self.tempo += 15  # Ganha 15 segundos extras para a partida
+                self.inventario.registrar_tempo()
             elif hit.tipo == 'passivo':
                 self.inventario.adicionar_item_passivo(
                     hit.nome_item, hit.dados_item)
 
-                if "Fragmento" in hit.nome_item:
+                if "fragmento" in hit.nome_item.lower():
                     self.inventario.adicionar_chave(hit.nome_item)
 
 
@@ -348,17 +350,20 @@ class Inventario:
     def __init__(self, player):
         self.player = player
         self.coisas = []  # Armazena os dicionários dos itens coletados
+        self.contagem_vida = 0
+        self.contagem_tempo = 0
 
     def adicionar_item_passivo(self, nome_item, dados_item):
         item = {"nome": nome_item, "tipo": "passivo"}
         item.update(dados_item)
+        item["nome"] = nome_item     
+        item["tipo"] = "passivo"      
         self.coisas.append(item)
 
         if "effect" in item:
             self._aplicar_efeito(item["effect"])
 
-        print(
-            f"Item coletado: {nome_item} - {item.get('description_item', 'Sem descrição')}")
+        print(f"Item coletado: {nome_item} - {item.get('description_item', 'Sem descrição')}")
 
     def adicionar_chave(self, tipo_chave):
         self.coisas.append({
@@ -366,6 +371,11 @@ class Inventario:
             "tipo": "chave",
             "subtipo": tipo_chave
         })
+    def registrar_vida(self):
+        self.contagem_vida += 1
+
+    def registrar_tempo(self):
+        self.contagem_tempo += 1
 
     def busca_chave(self):
         """Retorna True se o jogador tiver a chave inteira."""
@@ -378,8 +388,9 @@ class Inventario:
         """Conta quantos fragmentos de chave diferentes o jogador possui."""
         fragmentos = set()
         for item in self.coisas:
-            if item.get("tipo") == "chave" and "fragmento" in item.get("subtipo", ""):
-                fragmentos.add(item["subtipo"])
+            subtipo = item.get("subtipo", "")
+            if item.get("tipo") == "chave" and "fragmento" in subtipo.lower():
+                fragmentos.add(subtipo)
         return len(fragmentos)
 
     def _aplicar_efeito(self, efeito):
