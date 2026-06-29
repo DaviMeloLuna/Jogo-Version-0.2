@@ -47,7 +47,7 @@ class Game:
                 continue
 
             if tipo_sala in pool or 'tesouro - chefe' in pool:
-                itens_validos((nome, dados))
+                itens_validos.append((nome, dados))
 
             peso = 1.0 / max(qualidade, 0.1)
             pesos.append(peso)
@@ -58,56 +58,15 @@ class Game:
         item_escolhido = choices(itens_validos, weights=pesos, k=1)
         return item_escolhido
 
-    def createRoom(self, layout):
-        # Primeiro para pegar a string que compõe o mapa
-        for pos, row in enumerate(layout):
-            # Segundo para pegar os caracteres da string
-            for value, column in enumerate(row):
-                if column == "W":
-                    Wall(self, value, pos)
-                elif column == "P":
-                    if not hasattr(self, 'player') or self.player is None:
-                        self.player = Player(
-                            self, value, pos, self.player_status, False)
-                elif column == "H":
-                    Hole(self, value, pos)
-                elif column == "B":
-                    Block(self, value, pos)
-
-                elif column in ['N', 'S', 'E', 'O']:
-                    Door(self, value, pos, column)
-                elif column == "V":
-                    coletavelVida(self, value, pos)
-                elif column == "M":
-                    coletavelTempo(self, value, pos)
-                elif column == "U":
-                    # criação da mula sem cabeça
-                    MulaSemCabeca(self, value, pos)
-                    # Não tava conseguindo enteder direito onde colocar, botei aí para testar
-                    Iara(self, value, pos)
-                elif column == "C":
-                    Curupira(self, value, pos)  # criação do curupira
-
-    def troca_sala(self, novo_layout):
-        # Limpar as paredes, blocos, buracos atuais e portas abertas
-        for sprite in self.walls:
-            sprite.kill()
-        for sprite in self.blocks:
-            sprite.kill()
-        for sprite in self.holes:
-            sprite.kill()
-        for sprite in self.doors:
-            sprite.kill()
-        for sprite in self.pedestal:
-            sprite.kill()
+    def troca_sala(self, novo_sala):
         # Atualiza a sala atual
-        self.sala_atual = novo_layout
+        self.sala_atual = novo_sala
 
         # Maracação de visita ao entrar
         self.sala_atual.foi_visitada = True
 
         # Carrega o novo layout
-        self.createRoom(self.sala_atual.layout)
+        self.gerador.construir_sala(self.sala_atual)
 
     def new(self):
         # Quando começa um novo jogo
@@ -127,7 +86,6 @@ class Game:
         self.enemies = pygame.sprite.LayeredUpdates()
         self.pickup = pygame.sprite.LayeredUpdates()
 
-        self.player = None
         self.player_status = {
             "hp_max": 30,
             "vida_extra": 0,
@@ -140,9 +98,12 @@ class Game:
             "qtd_proj": 1
         }
 
+        self.player = Player(self, 10, 7, self.player_status, False)
+
         # Define quantas salas quer no andar
-        gerador = MapGenerator(10)
-        self.map, self.sala_atual = gerador.generate()
+
+        self.gerador = MapGenerator(10, self)
+        self.map, self.sala_atual = self.gerador.gerador()
 
         # Sala inicial descoberta por padrão
         self.sala_atual.foi_visitada = True
@@ -151,7 +112,7 @@ class Game:
         self.minimapa = Minimap(self)
 
         # Carrega a sala inicial (Start Room)
-        self.createRoom(self.sala_atual.layout)
+        self.gerador.construir_sala(self.sala_atual)
 
         # Criação do hud depois do player, porque ele lê dados do self.player
         self.hud = HUD(self)

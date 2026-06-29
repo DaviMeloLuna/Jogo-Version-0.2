@@ -55,7 +55,8 @@ class Player(pygame.sprite.Sprite):
         self.tempo_atordoado = 0
 
     def moviment(self):
-        speed = self.status['speed'] * 4 * self.velocidade_multiplicador #a velocidade do jogador é multiplicada pelo efeito do Curupira, que deixa o jogador mais lento
+        # a velocidade do jogador é multiplicada pelo efeito do Curupira, que deixa o jogador mais lento
+        speed = self.status['speed'] * 4 * self.velocidade_multiplicador
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -110,14 +111,14 @@ class Player(pygame.sprite.Sprite):
         if frequencia > self.teto_freq:
             return 7
         elif frequencia <= self.teto_freq and frequencia >= 0:
-            return 21 - 7 * (1.31 * frequencia) ** (1/2)
+            return 21 - 7 * (2.14 * frequencia) ** (1/2)
         elif frequencia < 0 and frequencia < -0.467:
-            return 21 - 7 * (1.31 * frequencia) ** (1/2) - 7 * (frequencia)
+            return 21 - 7 * (2.14 * frequencia) ** (1/2) - 7 * (frequencia)
         else:
             return 21 - 7 * (frequencia)
 
     def update(self):
-        #Atualiza efeito do Curupira
+        # Atualiza efeito do Curupira
         if self.atordoado:
             self.tempo_atordoado -= 1
             if self.tempo_atordoado <= 0:
@@ -148,11 +149,12 @@ class Player(pygame.sprite.Sprite):
         self.y_change = 0
 
     def aplicar_atordoamento(self):
-        if self.atordoado: # se o jogador já estiver atordoado, não aplica o efeito novamente
+        if self.atordoado:  # se o jogador já estiver atordoado, não aplica o efeito novamente
             return
-        self.atordoado = True #jogador atordoado
-        self.velocidade_multiplicador = 0.5 # deixa a velocidade do jogador pela metade
-        self.tempo_atordoado = FPS * 5 #o jogador fica atordoado por 5 segundos, depois volta a velocidade normal
+        self.atordoado = True  # jogador atordoado
+        self.velocidade_multiplicador = 0.5  # deixa a velocidade do jogador pela metade
+        # o jogador fica atordoado por 5 segundos, depois volta a velocidade normal
+        self.tempo_atordoado = FPS * 5
 
     def collide_walls(self, direction):
         if direction == "x":
@@ -340,6 +342,7 @@ class Projectile(pygame.sprite.Sprite):
                 hit.take_damage(self.damage)
                 self.kill()
                 break
+
 
 class Inventario:
     def __init__(self, player):

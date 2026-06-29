@@ -5,7 +5,6 @@ from classes.config import *
 
 
 class HUD:
-
     def __init__(self, game):
         self.game = game
         self.fonte_tempo = pygame.font.SysFont('Arial', 26, bold=True)

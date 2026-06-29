@@ -1,9 +1,21 @@
 import pygame
 import random
+import json
 import os
 
 from classes.config import *
 from classes.collectibles import *
+
+from classes.enemies import MulaSemCabeca, Iara, Curupira
+
+diretorio_atual = os.path.dirname(__file__)
+
+# Volta uma pasta ('..') e procura o arquivo JSON
+caminho_arquivo = os.path.join(
+    diretorio_atual, '..', 'assetes', 'dict_geral', 'rooms_assetes.json')
+
+with open(caminho_arquivo, 'r') as file:
+    ROOMS_ASSETS = json.load(file)
 
 
 class RoomNode:
@@ -11,204 +23,202 @@ class RoomNode:
         self.x = x
         self.y = y
         self.vizinho = {'N': None, 'S': None, 'E': None, 'O': None}
-        self.layout = []  # Vai guardar a lista de strings (tilemap) da sala
 
         self.foi_visitada = False
 
         self.tipo = 'normal'  # Pode ser: 'normal', 'chefe', 'tesouro'
 
-    def generate_layout(self):
-        LARGURA = 21
-        ALTURA = 15
-        layout_temp = []
-
-        prob_inimigo = round(random.randint(1, 100))
-
-        for y in range(ALTURA):
-            row = ""
-            for x in range(LARGURA):
-                if x == 0 or x == LARGURA - 1 or y == 0 or y == ALTURA - 1:
-                    if y == 0 and x == LARGURA // 2 and self.vizinho['N']:
-                        row += 'N'
-                    elif y == ALTURA - 1 and x == LARGURA // 2 and self.vizinho['S']:
-                        row += 'S'
-                    elif x == 0 and y == ALTURA // 2 and self.vizinho['O']:
-                        row += 'O'
-                    elif x == LARGURA - 1 and y == ALTURA // 2 and self.vizinho['E']:
-                        row += 'E'
-                    else:
-                        row += 'W'
-                else:
-                    row += '.'
-            layout_temp.append(row)
-
-        self.layout = layout_temp
+        self.room_asset_id = "sala"
 
 
 class MapGenerator:
-    def __init__(self, num_rooms):
+    def __init__(self, num_rooms, game):
         self.num_rooms = num_rooms
+        self.game = game
+
         self.grid = {}
-        self.map = []
+        self.mapa = []
 
-    def generate(self):
-        start_room = RoomNode(0, 0)
-        self.grid[(0, 0)] = start_room
-        rooms_created = 1
+        self.largura_sala = 21
+        self.altura_sala = 15
 
-        while rooms_created < self.num_rooms:
+    def gerador(self):
+        sala_inicial = RoomNode(0, 0)
+
+        sala_inicial.tipo = "inicial"
+        sala_inicial.room_asset_id = 'sala_inicial'
+
+        self.grid[(0, 0)] = sala_inicial
+        salas_criadas = 1
+
+        while salas_criadas <= self.num_rooms:
             rx, ry = random.choice(list(self.grid.keys()))
 
-            directions = [
-                ('N', 0, -1, 'S'),
+            direcao = [
+                ("N", 0, -1, "S"),
                 ('S', 0, 1, 'N'),
                 ('E', 1, 0, 'O'),
                 ('O', -1, 0, 'E')
             ]
 
-            d_name, dx, dy, op_name = random.choice(directions)
-            nx, ny = rx + dx, ry + dy
+            d_nome, dx, dy, op_nome = random.choice(direcao)
 
-            if (nx, ny) not in self.grid:
-                new_room = RoomNode(nx, ny)
-                self.grid[(nx, ny)] = new_room
+            novo_x, novo_y = rx + dx, ry + dy
 
-                self.grid[(rx, ry)].vizinho[d_name] = new_room
-                new_room.vizinho[op_name] = self.grid[(rx, ry)]
+            if (novo_x, novo_y) not in self.grid:
+                nova_sala = RoomNode(novo_x, novo_y)
+                self.grid[(novo_x, novo_y)] = nova_sala
 
-                rooms_created += 1
+                self.grid[(novo_x, novo_y)].vizinho[d_nome] = nova_sala
+                nova_sala.vizinho[op_nome] = self.grid[(rx, ry)]
 
-        for coords, room in self.grid.items():
-            room.generate_layout()
+                salas_criadas += 1
 
-            if coords == (0, 0):
-                row_list = list(room.layout[7])
-                row_list[10] = 'P'
-                room.layout[7] = "".join(row_list)
+        for coords, sala in self.grid.items():
+            if coords != (0, 0):
+                sala.tipo = "normal"
+                sala.room_asset_id = "sala"
+            self.mapa.append(sala)
 
-                # onde a mula sem cabeça vai ficar
-                row_list = list(room.layout[5])
-                row_list[10] = 'U'
-                room.layout[5] = "".join(row_list)
-
-                row = list(room.layout[9])  # onde o curupira vai ficar
-                row[6] = 'C'
-                room.layout[9] = "".join(row)
-
-                # Forçando o coletável de vida perto do jogador para teste
-                row_list = list(room.layout[9])
-                row_list[8] = 'V'
-                room.layout[9] = "".join(row_list)
-
-                # Forçando coletável de tempo perto do jogador para teste
-                row_list = list(room.layout[9])
-                row_list[12] = 'M'
-                room.layout[9] = "".join(row_list)
-            else:
-                row_list = list(room.layout[5])
-                row_list[10] = 'A'
-                room.layout[5] = "".join(row_list)
-
-                # Adiciona coletável de vida aleatoriamente
-                if random.random() < 0.5:  # 50% de chance
-                    row_list = list(room.layout[9])
-                    row_list[5] = 'V'
-                    room.layout[9] = "".join(row_list)
-
-                # Adiciona coletável de tempo  aleatoriamente
-                if random.random() < 0.5:  # 50% de chance
-                    row_list = list(room.layout[9])
-                    row_list[15] = 'M'
-                    room.layout[9] = "".join(row_list)
-
-            self.map.append(room)
-
-        # Algoritmo BFS para encontrar a distância de todas as salas a partir da inicial (0,0)
-        distancias = {}
-        fila = [start_room]
-        distancias[start_room] = 0
+        # Algoritmo BFS para definir as salas do chefe por distancia
+        distancia = {}
+        fila = [sala_inicial]
+        distancia[sala_inicial] = 0
 
         while fila:
             sala_atual = fila.pop(0)
-            dist_atual = distancias[sala_atual]
+            dist_atual = distancia[sala_atual]
+
             for vizinha in sala_atual.vizinho.values():
-                if vizinha and vizinha not in distancias:
-                    distancias[vizinha] = dist_atual + 1
-                    fila.append(vizinha)
+                if vizinha and vizinha not in distancia:
+                    distancia[vizinha] = dist_atual + 1
+                    fila.append(sala_atual)
 
-        # Ordena as salas por distância (Decrescente)
         salas_ordenadas = sorted(
-            distancias.items(), key=lambda x: x[1], reverse=True)
+            distancia.items(), key=lambda x: x[1], reverse=True)
 
-        # As 3 salas mais distantes se tornam salas de Chefe (Caveira)
+        # Sala dos chefes
+
         salas_chefe = []
 
         for sala, dist in salas_ordenadas:
-            if sala == start_room:
+            if sala == sala_inicial:
                 continue
 
             muito_perto = False
-
             for chefe in salas_chefe:
-                distancia = abs(sala.x - chefe.x) + abs(sala.y - chefe.y)
+                distancia_abs = abs(sala.x - chefe.x) + abs(sala.y - chefe.y)
+                qtd_vizinhos = sum(
+                    1 for v in sala.vizinho.value() if v is not None)
 
-                quantidade_vizinhos = sum(
-                    1 for vizinho in sala.vizinho.values()
-                    if vizinho is not None
-                )
-
-                if distancia <= 2:
-                    muito_perto = True
-                    break
-
-                if quantidade_vizinhos != 1:
+                if distancia_abs <= 2 or qtd_vizinhos != 1:
                     muito_perto = True
                     break
 
             if not muito_perto:
-                sala.tipo = 'chefe'
+                sala.tipo = "chefe"
+                sala.room_asset_id = 'sala_chefe'  # Mapeia para a sala de chefe do JSON
                 salas_chefe.append(sala)
-
-                linha = list(sala.layout[7])
-                linha[10] = 'T'
-
-                sala.layout[7] = "".join(linha)
 
             if len(salas_chefe) >= 3:
                 break
 
-        # Filtra as salas restantes para escolher as de Tesouro (Diamante)
-        candidatas_tesouro = []
+        # Filtro de salas do tesouro
+        candidata_tesouro = []
 
-        for sala in self.map:
-            if sala == start_room:
+        for sala in self.mapa:
+            if sala == sala_inicial or sala in salas_chefe:
                 continue
 
-            if sala in salas_chefe:
-                continue
+            qtd_vizinhos = sum(
+                1 for v in sala.vizinho.values() if v is not None)
+            if qtd_vizinhos == 1:
+                candidata_tesouro.append(sala)
 
-            quantidade_vizinhos = sum(
-                1 for vizinho in sala.vizinho.values()
-                if vizinho is not None
-            )
-
-            if quantidade_vizinhos == 1:
-                candidatas_tesouro.append(sala)
-
-        # Escolhe até 2 delas
-        salas_tesouro = random.sample(
-            candidatas_tesouro,
-            min(2, len(candidatas_tesouro))
-        )
-
-        for sala in salas_tesouro:
+        # Garantia de duas salas
+        sala_tesouro = random.sample(
+            candidata_tesouro, min(2, len(candidata_tesouro)))
+        for sala in sala_tesouro:
             sala.tipo = 'tesouro'
+            sala.room_asset_id = 'sala_tesouro'  # Mapeia para a sala do tesouro do json
 
-            linha = list(sala.layout[7])
-            linha[10] = 'T'
-            sala.layout[7] = "".join(linha)
+        return self.mapa, sala_inicial
 
-        return self.map, start_room
+    def limpar_sala_atual(self):
+        # Limpa a tela ao trocar de sala
+        for sprite in self.game.all_sprites:
+            if sprite != self.game.player and sprite.__class__.__name__ != 'PlayerHead':
+                sprite.kill()
+
+    def construir_sala(self, room_node):
+        # Usa o Json para construir a sala por elemento
+        self.limpar_sala_atual()
+
+        dados_sala = ROOMS_ASSETS.get(
+            room_node.room_asset_id, ROOMS_ASSETS["sala"])
+
+        # Contrução das paredes externas e portas
+        for y in range(self.altura_sala):
+            for x in range(self.largura_sala):
+                if x == 0 or x == self.largura_sala - 1 or y == 0 or y == self.altura_sala - 1:
+                    # Pergunta sobre a existência da porta por vizinho
+                    e_porta = False
+
+                    # Respota se tiver ao Norte (cima)
+                    if y == 0 and x == self.largura_sala // 2 and room_node.vizinho == ["N"]:
+                        Door(self.game, x, y, 'N')
+                        e_porta = True
+                    # Respota se tiver ao Sul (baixo)
+                    elif y == self.altura_sala - 1 and x == self.largura_sala // 2 and room_node.vizinho['S']:
+                        Door(self.game, x, y, 'S')
+                        is_door = True
+                    # Respota se tiver ao Oeste (esquerda)
+                    elif x == 0 and y == self.altura_sala // 2 and room_node.vizinho['O']:
+                        Door(self.game, x, y, 'O')
+                        is_door = True
+                    # Respota se tiver ao Leste (direita)
+                    elif x == self.largura_sala - 1 and y == self.altura_sala // 2 and room_node.vizinho['E']:
+                        Door(self.game, x, y, 'E')
+                        is_door = True
+
+                    if not e_porta:
+                        Block(self.game, x, y)
+
+        # Carregar pedras
+        if "pedra" in dados_sala:
+            for pos in dados_sala["pedra"]:
+                Block(self.game, pos[0], pos[1])
+
+        # Carregar buracos
+        if "buraco" in dados_sala:
+            for pos in dados_sala["buraco"]:
+                Block(self.game, pos[0], pos[1])
+
+        # Para a sala do tessouro
+        if "pedestal" in dados_sala:
+            pos = dados_sala["pedestal"]  # Formato [10, 7] do JSON
+            Pedestal(self.game, pos[0], pos[1])
+
+        # Posicionar o jogador se for a sala inicial:
+        if room_node.tipo == "inicial" and "player" in dados_sala:
+            pos = dados_sala["player"]
+            self.game.player.rect.x = pos[0] * TILESIZE
+            self.game.player.rect.y = pos[1] * TILESIZE
+
+        # Geração de inimigo, se for sala de chefe, o inimigo tem mais vida (4x mais)
+        if 'inimigo' in dados_sala:
+            inimigo_pos = dados_sala['inimigo']
+
+            # Caso tenha mais de um inimigo no dicionário do Json
+            if inimigo_pos and not isinstance(inimigo_pos[0], list):
+                inimigo_pos = [inimigo_pos]
+
+            for pos in inimigo_pos:
+                classe_inimigo = random.choice([MulaSemCabeca, Iara, Curupira])
+                inimigo_intanciado = classe_inimigo(self.game, pos[0], pos[1])
+
+                if room_node.tipo == 'chefe':
+                    inimigo_intanciado.hp = inimigo_intanciado.hp * 4
 
 
 class Minimap:

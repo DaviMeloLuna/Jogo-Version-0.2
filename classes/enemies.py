@@ -1,13 +1,10 @@
 import pygame
-import random
 import math
-import json
 
 from classes.config import *
 
 
 class BolaDeFogo(pygame.sprite.Sprite):  # classe para os projeteis da mula sem cabeça
-
     def __init__(self, game, x, y, dx, dy):
 
         self.game = game
@@ -48,7 +45,6 @@ class BolaDeFogo(pygame.sprite.Sprite):  # classe para os projeteis da mula sem 
 
 class MulaSemCabeca(pygame.sprite.Sprite):  # classe para a mula sem cabeça
     def __init__(self, game, x, y):
-
         self.game = game
 
         self._layer = PLAYER_LAYER
@@ -56,26 +52,27 @@ class MulaSemCabeca(pygame.sprite.Sprite):  # classe para a mula sem cabeça
 
         pygame.sprite.Sprite.__init__(self, self.group)
 
-        self.x = x * TILESIZE
-        self.y = y * TILESIZE
-
         # aparencia do quadrado laranja representando a mula sem cabeça
         self.image = pygame.Surface((TILESIZE, TILESIZE))
         self.image.fill((255, 100, 0))
 
         self.rect = self.image.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
+
+        self.rect.x = x * TILESIZE
+        self.rect.y = y * TILESIZE
 
         self.hitbox = self.rect.copy()
 
         self.speed = 2
+        self.hp = 20.0
 
         self.cooldown_tiro = 0
 
-    # a mula sem cabeça não recebe dano, então esse método é só um placeholder para evitar erros caso o jogador tente atacar ela
+    # a mula é um inimigo para testes
     def take_damage(self, damage):
-        pass
+        self.hp -= damage
+        if self.hp <= 0:
+            self.kill()
 
     def update(self):
 
@@ -183,9 +180,8 @@ class Poder(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(self, self.game.walls, False):
             self.kill()
 
+
 # Inimigo
-
-
 class Iara(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
@@ -208,11 +204,15 @@ class Iara(pygame.sprite.Sprite):
 
         # Começamos com zero para poder atacar logo
         self.cooldown_tiro = 0
+        self.hp = 30.0
 
         self.hitbox = self.rect.copy()
 
     def take_damage(self, damage):  # Só para não dar erro
-        pass
+        self.hp -= damage
+
+        if self.hp <= 0:
+            self.kill()
 
     def update(self):
         player = self.game.player
@@ -231,9 +231,7 @@ class Iara(pygame.sprite.Sprite):
 
 
 class Curupira(pygame.sprite.Sprite):
-
     def __init__(self, game, x, y):
-
         self.game = game
         self._layer = PLAYER_LAYER
         self.group = self.game.all_sprites
@@ -242,9 +240,19 @@ class Curupira(pygame.sprite.Sprite):
 
         self.image = pygame.Surface((TILESIZE, TILESIZE))
         self.image.fill((0, 180, 0))  # quadrado verde
+
         self.rect = self.image.get_rect()
+
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
+
+        self.hp = 25.0
+
+    def take_damage(self, damage):
+        self.hp -= damage
+
+        if self.hp <= 0:
+            self.kill()
 
     def update(self):
 
