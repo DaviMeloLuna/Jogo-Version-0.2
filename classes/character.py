@@ -356,14 +356,15 @@ class Inventario:
     def adicionar_item_passivo(self, nome_item, dados_item):
         item = {"nome": nome_item, "tipo": "passivo"}
         item.update(dados_item)
-        item["nome"] = nome_item     
-        item["tipo"] = "passivo"      
+        item["nome"] = nome_item
+        item["tipo"] = "passivo"
         self.coisas.append(item)
 
         if "effect" in item:
             self._aplicar_efeito(item["effect"])
 
-        print(f"Item coletado: {nome_item} - {item.get('description_item', 'Sem descrição')}")
+        print(
+            f"Item coletado: {nome_item} - {item.get('description_item', 'Sem descrição')}")
 
     def adicionar_chave(self, tipo_chave):
         self.coisas.append({
@@ -371,6 +372,7 @@ class Inventario:
             "tipo": "chave",
             "subtipo": tipo_chave
         })
+
     def registrar_vida(self):
         self.contagem_vida += 1
 

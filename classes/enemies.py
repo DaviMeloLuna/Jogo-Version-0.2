@@ -33,7 +33,7 @@ class BolaDeFogo(pygame.sprite.Sprite):  # classe para os projeteis da mula sem 
 
         if self.rect.colliderect(self.game.player.rect):
             self.game.player.hp = max(
-                0, self.game.player.hp - 1)  # dá dano ao jogador
+                0, self.game.player.hp - 5)  # dá dano ao jogador
             self.kill()  # destrói o projétil ao colidir com o jogador
 
         if pygame.sprite.spritecollide(self, self.game.walls, False):
@@ -74,7 +74,6 @@ class MulaSemCabeca(pygame.sprite.Sprite):  # classe para a mula sem cabeça
             self.kill()
 
     def update(self):
-
         player = self.game.player
 
         if player is None:
@@ -111,29 +110,23 @@ class MulaSemCabeca(pygame.sprite.Sprite):  # classe para a mula sem cabeça
             dx = player.rect.centerx - self.rect.centerx
             dy = player.rect.centery - self.rect.centery
 
-            distancia = (dx**2 + dy**2)**0.5
+            distancia = math.sqrt(dx**2 + dy**2)
 
-            # s[o atira a depender da distancia do jogador, para não ficar atirando a todo momento
+            # só atira a depender da distancia do jogador, para não ficar atirando a todo momento
             if distancia > 0 and distancia < 250:
 
                 dx /= distancia  # normalização do vetor direção
                 dy /= distancia
 
                 BolaDeFogo(
-                    self.game,
-                    self.rect.centerx,
-                    self.rect.centery,
-                    dx,
-                    dy
-                )
+                    self.game, self.rect.centerx, self.rect.centery, dx, dy)
 
-                self.cooldown_tiro = 120  # espera um tempo de +- 2 segundos antes de atirar novamente, limitando a quantidade de projéteis na tela e dando uma chance para o jogador se esquivar
+                self.cooldown_tiro = 2 * FPS  # espera um tempo de 2 segundos antes de atirar novamente, limitando a quantidade de projéteis na tela e dando uma chance para o jogador se esquivar
 
 
 # Criando a Iara:
 class Poder(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
-
         self.game = game
 
         # Ajeitar a imagem do ataque
@@ -197,8 +190,8 @@ class Iara(pygame.sprite.Sprite):
         self.image.fill((0, 0, 255))
 
         self.rect = self.image.get_rect()
-        self.rect.centerx = self.x
-        self.rect.centery = self.y
+        self.rect.x = self.x
+        self.rect.y = self.y
 
         # Começamos com zero para poder atacar logo
         self.cooldown_tiro = 0
@@ -216,8 +209,8 @@ class Iara(pygame.sprite.Sprite):
         player = self.game.player
 
         # Calculando a distância para ajeitar o alcance:
-        distancia = ((self.rect.centerx - player.rect.centerx) **
-                     2 + (self.rect.centery - player.rect.centery)**2)**0.5
+        distancia = ((self.rect.x - player.rect.x) **
+                     2 + (self.rect.y - player.rect.y)**2)**0.5
 
         # Primeiro vamos verificar se o jogador tá perto o suficiente
         if distancia < 128:  # Chutei um número qualquer para testar
@@ -232,7 +225,7 @@ class Curupira(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = PLAYER_LAYER
-        self.group = self.game.all_sprites
+        self.group = self.game.all_sprites, self.game.enemies
 
         pygame.sprite.Sprite.__init__(self, self.group)
 
@@ -244,6 +237,9 @@ class Curupira(pygame.sprite.Sprite):
         self.rect.x = x * TILESIZE
         self.rect.y = y * TILESIZE
 
+        self.hitbox = self.rect.copy()
+
+        self.speed = 1.5
         self.hp = 25.0
 
     def take_damage(self, damage):
@@ -253,9 +249,27 @@ class Curupira(pygame.sprite.Sprite):
             self.kill()
 
     def update(self):
-
         # saber se o jogador encostou no curupira
         if self.rect.colliderect(self.game.player.rect):
             # aplica o efeito de atordoamento no jogador
             self.game.player.aplicar_atordoamento()
             self.kill()  # o curupira desaparece apos aplicar o efeito
+
+        player = self.game.player
+
+        if player is None:
+            return
+
+        # Irá perseguir o player, independentemente da distância do player
+        # mov horizontal
+        if self.rect.centerx < player.rect.centerx:
+            self.rect.x += self.speed
+
+        elif self.rect.centerx > player.rect.centerx:
+            self.rect.x -= self.speed
+        # mov vertical
+        if self.rect.centery < player.rect.centery:
+            self.rect.y += self.speed
+
+        elif self.rect.centery > player.rect.centery:
+            self.rect.y -= self.speed

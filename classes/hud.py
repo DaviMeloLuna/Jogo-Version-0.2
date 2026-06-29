@@ -17,11 +17,11 @@ class HUD:
 
         self.tamanho_coracao = 22
         self.espaco_coracao = 4
-        self.vida_por_coracao = 10 
+        self.vida_por_coracao = 10
 
         self.tamanho_icone_item = 28
         self.espaco_icone_item = 4
-        
+
     def draw(self, screen):
         player = self.game.player
         if player is None:
@@ -147,9 +147,11 @@ class HUD:
             item for item in inventario.coisas if item.get('tipo') == 'passivo'
         ]
 
-        contagem_itens = Counter(item.get('nome', '?') for item in itens_passivos)
+        contagem_itens = Counter(item.get('nome', '?')
+                                 for item in itens_passivos)
 
-        y_icones = self.margem + (self.fonte_pequena.get_height() if texto else 0) + 4
+        y_icones = self.margem + \
+            (self.fonte_pequena.get_height() if texto else 0) + 4
         x_icone = x_direita
 
         contadores_fixos = [
@@ -168,7 +170,8 @@ class HUD:
             rect_icone = pygame.Rect(
                 x_icone, y_icones, self.tamanho_icone_item, self.tamanho_icone_item
             )
-            self._desenhar_icone_fixo(screen, rect_icone, letra, cor_icone, quantidade)
+            self._desenhar_icone_fixo(
+                screen, rect_icone, letra, cor_icone, quantidade)
 
         for nome, quantidade in reversed(list(contagem_itens.items())):
             x_icone -= self.tamanho_icone_item + self.espaco_icone_item
@@ -203,7 +206,7 @@ class HUD:
 
             qtd_rect = qtd_render.get_rect(center=centro_badge)
             screen.blit(qtd_render, qtd_rect)
-            
+
     def _desenhar_icone_fixo(self, screen, rect_icone, letra, cor_icone, quantidade):
         pygame.draw.rect(screen, cor_icone, rect_icone)
         pygame.draw.rect(screen, WHITE, rect_icone, 1)

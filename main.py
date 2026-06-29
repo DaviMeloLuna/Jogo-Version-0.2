@@ -91,7 +91,7 @@ class Game:
             "vida_extra": 0,
             "dano": 3.5,
             "multi_atq": 1.0,
-            "alcance": 7.0,
+            "alcance": 8.5,
             "atq_speed": 1.0,
             "frequencia": 0.0,
             "speed": 1.0,
@@ -168,10 +168,10 @@ class Game:
             self.draw()
         self.runnning = False
 
-    def game_over(self):
+    def intro_screen(self):
         pass
 
-    def intro_screen(self):
+    def game_over(self):
         pass
 
     def menu(self):

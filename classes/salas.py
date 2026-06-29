@@ -43,6 +43,18 @@ class MapGenerator:
         self.largura_sala = 21
         self.altura_sala = 15
 
+        self.pools_de_salas = {}
+        self.separar_salas_por_tipo()
+
+    def separar_salas_por_tipo(self):
+        for salas_id, dados in ROOMS_ASSETS.items():
+            tipo = dados.get("tipo", "normal")
+
+            if tipo not in self.pools_de_salas:
+                self.pools_de_salas[tipo] = []
+
+            self.pools_de_salas[tipo].append(salas_id)
+
     def gerador(self):
         sala_inicial = RoomNode(0, 0)
 
@@ -139,15 +151,27 @@ class MapGenerator:
         # Garantia de duas salas
         sala_tesouro = random.sample(
             candidata_tesouro, min(2, len(candidata_tesouro)))
+
         for sala in sala_tesouro:
             sala.tipo = 'tesouro'
             sala.room_asset_id = 'sala_tesouro'  # Mapeia para a sala do tesouro do json
+
+        for sala in self.grid.values():
+            tipo_da_sala = sala.tipo
+
+            # Se o tipo da sala existir no JSON, escolhe uma aleatória daquele tipo
+            if tipo_da_sala in self.pools_de_salas:
+                sala.room_asset_id = random.choice(
+                    self.pools_de_salas[tipo_da_sala])
+            else:
+                sala.room_asset_id = random.choice(
+                    self.pools_de_salas.get("normal", ["sala1"]))
 
         return self.mapa, sala_inicial
 
     def limpar_sala_atual(self):
         # Limpa a tela ao trocar de sala
-        for sprite in self.game.all_sprites:
+        for sprite in list(self.game.all_sprites):
             if sprite != self.game.player and sprite.__class__.__name__ != 'PlayerHead':
                 sprite.kill()
 
@@ -155,17 +179,7 @@ class MapGenerator:
         # Usa o Json para construir a sala por elemento
         self.limpar_sala_atual()
 
-        sala_disponivel = ['sala1', 'sala2', 'sala3', 'sala4']
-
-        if room_node.tipo == 'tesouro':
-            sala = 'sala_tesouro'
-        elif room_node.tipo == 'chefe':
-            sala = 'sala_chefe'
-        else:
-            sala = random.choice(sala_disponivel)
-
-        dados_sala = ROOMS_ASSETS.get(
-            room_node.room_asset_id, ROOMS_ASSETS[sala])
+        dados_sala = ROOMS_ASSETS[room_node.room_asset_id]
 
         # Contrução das paredes externas e portas
         for y in range(self.altura_sala):
@@ -203,6 +217,10 @@ class MapGenerator:
         if "buraco" in dados_sala:
             for pos in dados_sala["buraco"]:
                 Block(self.game, pos[0], pos[1])
+
+        if "parede" in dados_sala:
+            for pos in dados_sala["parede"]:
+                Wall(self.game, pos[0], pos[1])
 
         # Para a sala do tessouro
         if "pedestal" in dados_sala:

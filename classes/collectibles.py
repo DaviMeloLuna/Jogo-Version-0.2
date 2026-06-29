@@ -1,5 +1,4 @@
 import pygame
-# A biblioteca "os" foi importada para facilitar o caminho das sprites, criando um tipo de caminho relativo
 import os
 
 from classes.config import *
