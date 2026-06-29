@@ -25,6 +25,7 @@ class RoomNode:
         self.vizinho = {'N': None, 'S': None, 'E': None, 'O': None}
 
         self.foi_visitada = False
+        self.sala_limpa = False
 
         self.tipo = 'normal'  # Pode ser: 'normal', 'chefe', 'tesouro'
 
@@ -69,7 +70,7 @@ class MapGenerator:
                 nova_sala = RoomNode(novo_x, novo_y)
                 self.grid[(novo_x, novo_y)] = nova_sala
 
-                self.grid[(novo_x, novo_y)].vizinho[d_nome] = nova_sala
+                self.grid[(rx, ry)].vizinho[d_nome] = nova_sala
                 nova_sala.vizinho[op_nome] = self.grid[(rx, ry)]
 
                 salas_criadas += 1
@@ -92,7 +93,7 @@ class MapGenerator:
             for vizinha in sala_atual.vizinho.values():
                 if vizinha and vizinha not in distancia:
                     distancia[vizinha] = dist_atual + 1
-                    fila.append(sala_atual)
+                    fila.append(vizinha)
 
         salas_ordenadas = sorted(
             distancia.items(), key=lambda x: x[1], reverse=True)
@@ -109,7 +110,7 @@ class MapGenerator:
             for chefe in salas_chefe:
                 distancia_abs = abs(sala.x - chefe.x) + abs(sala.y - chefe.y)
                 qtd_vizinhos = sum(
-                    1 for v in sala.vizinho.value() if v is not None)
+                    1 for v in sala.vizinho.values() if v is not None)
 
                 if distancia_abs <= 2 or qtd_vizinhos != 1:
                     muito_perto = True
@@ -154,8 +155,17 @@ class MapGenerator:
         # Usa o Json para construir a sala por elemento
         self.limpar_sala_atual()
 
+        sala_disponivel = ['sala1', 'sala2', 'sala3', 'sala4']
+
+        if room_node.tipo == 'tesouro':
+            sala = 'sala_tesouro'
+        elif room_node.tipo == 'chefe':
+            sala = 'sala_chefe'
+        else:
+            sala = random.choice(sala_disponivel)
+
         dados_sala = ROOMS_ASSETS.get(
-            room_node.room_asset_id, ROOMS_ASSETS["sala"])
+            room_node.room_asset_id, ROOMS_ASSETS[sala])
 
         # Contrução das paredes externas e portas
         for y in range(self.altura_sala):
@@ -165,24 +175,24 @@ class MapGenerator:
                     e_porta = False
 
                     # Respota se tiver ao Norte (cima)
-                    if y == 0 and x == self.largura_sala // 2 and room_node.vizinho == ["N"]:
+                    if y == 0 and x == self.largura_sala // 2 and room_node.vizinho["N"]:
                         Door(self.game, x, y, 'N')
                         e_porta = True
                     # Respota se tiver ao Sul (baixo)
                     elif y == self.altura_sala - 1 and x == self.largura_sala // 2 and room_node.vizinho['S']:
                         Door(self.game, x, y, 'S')
-                        is_door = True
+                        e_porta = True
                     # Respota se tiver ao Oeste (esquerda)
                     elif x == 0 and y == self.altura_sala // 2 and room_node.vizinho['O']:
                         Door(self.game, x, y, 'O')
-                        is_door = True
+                        e_porta = True
                     # Respota se tiver ao Leste (direita)
                     elif x == self.largura_sala - 1 and y == self.altura_sala // 2 and room_node.vizinho['E']:
                         Door(self.game, x, y, 'E')
-                        is_door = True
+                        e_porta = True
 
                     if not e_porta:
-                        Block(self.game, x, y)
+                        Wall(self.game, x, y)
 
         # Carregar pedras
         if "pedra" in dados_sala:
@@ -206,7 +216,7 @@ class MapGenerator:
             self.game.player.rect.y = pos[1] * TILESIZE
 
         # Geração de inimigo, se for sala de chefe, o inimigo tem mais vida (4x mais)
-        if 'inimigo' in dados_sala:
+        if 'inimigo' in dados_sala and not room_node.sala_limpa:
             inimigo_pos = dados_sala['inimigo']
 
             # Caso tenha mais de um inimigo no dicionário do Json

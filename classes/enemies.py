@@ -6,7 +6,6 @@ from classes.config import *
 
 class BolaDeFogo(pygame.sprite.Sprite):  # classe para os projeteis da mula sem cabeça
     def __init__(self, game, x, y, dx, dy):
-
         self.game = game
 
         self._layer = PROJ_LAYER
@@ -133,7 +132,6 @@ class MulaSemCabeca(pygame.sprite.Sprite):  # classe para a mula sem cabeça
 
 # Criando a Iara:
 class Poder(pygame.sprite.Sprite):
-
     def __init__(self, game, x, y):
 
         self.game = game

@@ -101,8 +101,7 @@ class Game:
         self.player = Player(self, 10, 7, self.player_status, False)
 
         # Define quantas salas quer no andar
-
-        self.gerador = MapGenerator(10, self)
+        self.gerador = MapGenerator(16, self)
         self.map, self.sala_atual = self.gerador.gerador()
 
         # Sala inicial descoberta por padrão
@@ -139,6 +138,10 @@ class Game:
             # Verfica se o jogador morreu, se sim, termina o jogo
             if self.player.hp <= 0:
                 self.playing = False
+
+            if not self.sala_atual.sala_limpa:
+                if len(self.enemies) == 0:
+                    self.sala_atual.sala_limpa = True
 
         if self.espera_porta > 0:
             self.espera_porta -= 1
